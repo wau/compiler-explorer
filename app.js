@@ -359,6 +359,13 @@ aws.initConfig(awsProps)
                     return options;
                 }
 
+                function isLinkBotExpander(req) {
+                    const userAgent = req.get('User-Agent');
+                    return userAgent === 'Twitterbot/1.0' ||
+                        userAgent === 'Slackbot-LinkExpanding 1.0' ||
+                        userAgent.includes('Discordbot/2.0');
+                }
+
                 function escapeLine(req, line) {
                     const userAgent = req.get('User-Agent');
                     if (userAgent.includes('Discordbot/2.0')) {
@@ -486,8 +493,7 @@ aws.initConfig(awsProps)
                             staticHeaders(res);
                             contentPolicyHeader(res);
 
-                            const userAgent = req.get('User-Agent');
-                            if (userAgent === 'Twitterbot/1.0') {
+                            if (isLinkBotExpander(req)) {
                                 res.render('card', renderConfig({metadata: metadata}));
                             } else {
                                 res.render('index', renderConfig({
