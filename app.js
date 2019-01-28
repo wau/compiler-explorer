@@ -485,18 +485,24 @@ aws.initConfig(awsProps)
                             }
                             staticHeaders(res);
                             contentPolicyHeader(res);
-                            res.render('index', renderConfig({
-                                embedded: false,
-                                config: config,
-                                metadata: metadata
-                            }));
-                            // And finally, increment the view count
-                            // If any errors pop up, they are just logged, but the response should still be valid
-                            // It's really  unlikely that it happens as a result of the id not being there though,
-                            // but can be triggered with a missing implementation for a derived storage (s3/local...)
-                            storageHandler.incrementViewCount(id).catch(err => {
-                                logger.error(`Error incrementing view counts for ${id} - ${err}`);
-                            });
+
+                            const userAgent = req.get('User-Agent');
+                            if (userAgent === 'Twitterbot/1.0') {
+                                res.render('card', renderConfig({metadata: metadata}));
+                            } else {
+                                res.render('index', renderConfig({
+                                    embedded: false,
+                                    config: config,
+                                    metadata: metadata
+                                }));
+                                // And finally, increment the view count
+                                // If any errors pop up, they are just logged, but the response should still be valid
+                                // It's really  unlikely that it happens as a result of the id not being there though,
+                                // but can be triggered with a missing implementation for a derived storage (s3/local..)
+                                storageHandler.incrementViewCount(id).catch(err => {
+                                    logger.error(`Error incrementing view counts for ${id} - ${err}`);
+                                });
+                            }
                         })
                         .catch(err => {
                             logger.warn(`Could not expand ${id}: ${err}`);
