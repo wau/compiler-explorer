@@ -43,6 +43,7 @@
     "mkdirp": "^0.5.1",
     "monaco-editor": "0.10.1",
     "morgan": "^1.9.1",
+    "node-targz": "^0.2.0",
     "nopt": "3.0.x",
     "popper.js": "^1.14.4",
     "promise-queue": "2.2.3",
@@ -56,11 +57,11 @@
     "tree-kill": "^1.2.0",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "underscore": "1.9.1",
+    "uuid": "^3.3.2",
     "vis": "4.20.1",
     "winston": "^2.4.0",
     "wolfy87-eventemitter": "^5.2.3",
-    "yarn": "^1.13.0",
-    "node-targz": "^0.2.0"
+    "yarn": "^1.13.0"
   },
   "devDependencies": {
     "aws-sdk-mock": "^1.7.0",
