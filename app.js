@@ -41,6 +41,7 @@ const nopt = require('nopt'),
     webpackDevMiddleware = require("webpack-dev-middleware"),
     utils = require('./lib/utils'),
     clientState = require('./lib/clientstate'),
+    runExecClient = require('./lib/execution/client').runExecClient,
     clientStateGoldenifier = require('./lib/clientstate-normalizer').ClientStateGoldenifier,
     clientStateNormalizer = require('./lib/clientstate-normalizer').ClientStateNormalizer;
 
@@ -53,6 +54,7 @@ const opts = nopt({
     port: [Number],
     propDebug: [Boolean],
     debug: [Boolean],
+    executionClient: [Boolean],
     static: [String],
     archivedVersions: [String],
     // Ignore fetch marks and assume every compiler is found locally
@@ -195,6 +197,11 @@ const awsProps = props.propsFor("aws");
 
 aws.initConfig(awsProps)
     .then(() => {
+        if (opts.executionClient) {
+            runExecClient(compilerProps);
+            return;
+        }
+
         // function to load internal binaries (i.e. lib/source/*.js)
         function loadSources() {
             const sourcesDir = "lib/sources";
