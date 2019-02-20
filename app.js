@@ -198,7 +198,7 @@ const awsProps = props.propsFor("aws");
 aws.initConfig(awsProps)
     .then(() => {
         if (opts.executionClient) {
-            runExecClient(compilerProps);
+            runExecClient(compilerProps, ceProps, awsProps);
             return;
         }
 
@@ -214,7 +214,7 @@ aws.initConfig(awsProps)
         const ClientOptionsHandler = require('./lib/options-handler');
         const clientOptionsHandler = new ClientOptionsHandler(fileSources, compilerProps, defArgs);
         const CompilationEnvironment = require('./lib/compilation-env');
-        const compilationEnvironment = new CompilationEnvironment(compilerProps, defArgs.doCache);
+        const compilationEnvironment = new CompilationEnvironment(compilerProps, defArgs.doCache, awsProps);
         const CompileHandler = require('./lib/handlers/compile').Handler;
         const compileHandler = new CompileHandler(compilationEnvironment, awsProps);
         const StorageHandler = require('./lib/storage/storage');
