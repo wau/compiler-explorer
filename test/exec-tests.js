@@ -84,6 +84,17 @@ if (process.platform !== 'win32') { // POSIX
                 });
         });
     });
+    describe('it runs firejail', () => {
+        it('can echo', () => {
+            return exec.firejail('/bin/bash', ['-c', 'echo', 'hello', 'world'], {}).should.eventually.deep.equals(
+                {
+                    code: 0,
+                    okToCache: true,
+                    stderr: "",
+                    stdout: "hello world\n"
+                });
+        });
+    });
 } else { // win32
     describe('Executes external commands', () => {
         // note: we use powershell, since echo is a builtin, and false doesn't exist
