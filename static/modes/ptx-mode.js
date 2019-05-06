@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Matt Godbolt & Rubén Rincón
+// Copyright (c) 2019, Compiler Explorer Authors
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -21,26 +21,33 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+'use strict';
+var $ = require('jquery');
+var asm = require('./asm-mode');
 
-const BaseCompiler = require('../base-compiler'),
-    argumentParsers = require("./argument-parsers");
+function definition() {
+    var ptx = $.extend(true, {}, asm); // deep copy
 
-class ISPCCompiler extends BaseCompiler {
-    optionsForFilter(filters, outputFilename) {
-        let options = ['--target=sse2-i32x4', '--emit-asm', '-g', '-o', this.filename(outputFilename)];
-        if (this.compiler.intelAsm && filters.intel && !filters.binary) {
-            options = options.concat(this.compiler.intelAsm.split(" "));
-        }
-        return options;
-    }
+    // Redefine registers for ptx:
+    // Usually ptx registers are in the form "%[pr][0-9]+", but a bunch of magic registers does not follow
+    // this scheme (see https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#special-registers ).
+    // Thus the register-regex captures everything that starts with a '%'.
+    ptx.registers = /%[a-z0-9_\\.]+/;
 
-    getArgumentParser() {
-        return argumentParsers.ISPC;
-    }
 
-    isCfgCompiler(/*compilerVersion*/) {
-        return true;
-    }
+    // Redefine whitespaces, as asm interprets strings with a leading '@' as comments.
+    ptx.tokenizer.whitespace = [
+        [/[ \t\r\n]+/, 'white'],
+        [/\/\*/, 'comment', '@comment'],
+        [/\/\/.*$/, 'comment'],
+        [/[#;\\].*$/, 'comment']
+    ];
+
+    // Add predicated instructions to the list of root tokens. Search for an opcode next, which is also a root token.
+    ptx.tokenizer.root.push([/@%p[0-9]+/, {token: 'operator', next: '@root'}]);
+
+    return ptx;
 }
 
-module.exports = ISPCCompiler;
+monaco.languages.register({id: 'ptx'});
+monaco.languages.setMonarchTokensProvider('ptx', definition());

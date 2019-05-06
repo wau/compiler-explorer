@@ -40,6 +40,7 @@ var local = require('../local');
 var Sentry = require('@sentry/browser');
 var Libraries = require('../libs-widget');
 require('../modes/asm-mode');
+require('../modes/ptx-mode');
 
 require('selectize');
 
@@ -104,7 +105,7 @@ function Compiler(hub, container, state) {
     this.outputEditor = monaco.editor.create(this.monacoPlaceholder[0], {
         scrollBeyondLastLine: false,
         readOnly: true,
-        language: 'asm',
+        language: languages[this.currentLangId].monacoDisassembly || 'asm',
         fontFamily: this.settings.editorsFFont,
         glyphMargin: !options.embedded,
         fixedOverflowWidgets: true,
@@ -119,6 +120,7 @@ function Compiler(hub, container, state) {
     this.compilerPicker.selectize({
         sortField: [
             {field: '$order'},
+            {field: '$score'},
             {field: 'name'}
         ],
         valueField: 'id',
@@ -215,6 +217,11 @@ Compiler.prototype.initPanerButtons = function () {
             this.sourceEditorId);
     }, this);
 
+    var createIrView = _.bind(function () {
+        return Components.getIrViewWith(this.id, this.source, this.lastResult.irOutput, this.getCompilerName(),
+            this.sourceEditorId);
+    }, this);
+
     var createGccDumpView = _.bind(function () {
         return Components.getGccDumpViewWith(this.id, this.getCompilerName(), this.sourceEditorId,
             this.lastResult.gccDumpOutput);
@@ -257,6 +264,16 @@ Compiler.prototype.initPanerButtons = function () {
         var insertPoint = this.hub.findParentRowOrColumn(this.container) ||
             this.container.layoutManager.root.contentItems[0];
         insertPoint.addChild(createAstView);
+    }, this));
+
+    this.container.layoutManager
+        .createDragSource(this.irButton, createIrView)
+        ._dragListener.on('dragStart', togglePannerAdder);
+
+    this.irButton.click(_.bind(function () {
+        var insertPoint = this.hub.findParentRowOrColumn(this.container) ||
+            this.container.layoutManager.root.contentItems[0];
+        insertPoint.addChild(createIrView);
     }, this));
 
     this.container.layoutManager
@@ -466,7 +483,8 @@ Compiler.prototype.compile = function (bypassCache, newTools) {
                 rtlDump: this.rtlDumpEnabled
             },
             produceOptInfo: this.wantOptInfo,
-            produceCfg: this.cfgViewOpen
+            produceCfg: this.cfgViewOpen,
+            produceIr: this.irViewOpen
         },
         filters: this.getEffectiveFilters(),
         tools: this.getActiveTools(newTools)
@@ -773,6 +791,22 @@ Compiler.prototype.onAstViewClosed = function (id) {
     }
 };
 
+Compiler.prototype.onIrViewOpened = function (id) {
+    if (this.id === id) {
+        this.irButton.prop('disabled', true);
+        this.irViewOpen = true;
+        this.compile();
+    }
+};
+
+Compiler.prototype.onIrViewClosed = function (id) {
+    if (this.id === id) {
+        this.irButton.prop('disabled', true);
+        this.irViewOpen = false;
+        this.compile();
+    }
+};
+
 Compiler.prototype.onGccDumpUIInit = function (id) {
     if (this.id === id) {
         this.compile();
@@ -847,6 +881,7 @@ Compiler.prototype.initButtons = function (state) {
 
     this.optButton = this.domRoot.find('.btn.view-optimization');
     this.astButton = this.domRoot.find('.btn.view-ast');
+    this.irButton = this.domRoot.find('.btn.view-ir');
     this.gccDumpButton = this.domRoot.find('.btn.view-gccdump');
     this.cfgButton = this.domRoot.find('.btn.view-cfg');
     this.libsButton = this.domRoot.find('.btn.show-libs');
@@ -1005,6 +1040,7 @@ Compiler.prototype.updateButtons = function () {
 
     this.optButton.prop('disabled', !this.compiler.supportsOptOutput);
     this.astButton.prop('disabled', !this.compiler.supportsAstView);
+    this.irButton.prop('disabled', !this.compiler.supportsIrView);
     this.cfgButton.prop('disabled', !this.compiler.supportsCfg);
     this.gccDumpButton.prop('disabled', !this.compiler.supportsGccDump);
 
@@ -1095,6 +1131,8 @@ Compiler.prototype.initListeners = function () {
     this.eventHub.on('optViewClosed', this.onOptViewClosed, this);
     this.eventHub.on('astViewOpened', this.onAstViewOpened, this);
     this.eventHub.on('astViewClosed', this.onAstViewClosed, this);
+    this.eventHub.on('irViewOpened', this.onIrViewOpened, this);
+    this.eventHub.on('irViewClosed', this.onIrViewClosed, this);
     this.eventHub.on('outputOpened', this.onOutputOpened, this);
     this.eventHub.on('outputClosed', this.onOutputClosed, this);
 

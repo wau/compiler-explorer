@@ -5,8 +5,8 @@ language: node_js
 before_install:
     - etc/scripts/travis.sh
 
-node_js: 
-    - "8"
+node_js:
+    - "10"
 
 before_script:
     - export PATH=$PATH:$PWD/.travis-compilers/ghc/bin
@@ -21,14 +21,14 @@ cache:
         - .travis-compilers
 
 script:
-    - yarn run check
-    - yarn run codecov
+    - npm run check
+    - npm run codecov
     - make changelog
     - make -j$(nproc) travis-dist
 
 deploy:
     on:
-        all_branches: 
+        all_branches:
             true
     provider: s3
     bucket: "compiler-explorer"

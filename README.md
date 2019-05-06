@@ -50,14 +50,14 @@ Assuming you have a compatible version of `node` installed, simply running
  on your local machine: http://localhost:10240/.
  Currently **Compiler Explorer**
  [requires the latest LTS](CONTRIBUTING.md#node-version) `node` version
- (_v8_) installed, either on the path or at `NODE_DIR`
+ (_v10_) installed, either on the path or at `NODE_DIR`
  (an environment variable or `make` parameter).
 
 
 Running with `make EXTRA_ARGS='--language LANG'` will allow you to load
  `LANG` exclusively, where `LANG` is one for the language ids/aliases defined
  in `lib/languages.js`. The `Makefile` will automatically install all the
- third party libraries needed to run; using `yarn` to install server-side and
+ third party libraries needed to run; using `npm` to install server-side and
  client side components.
 
 The config system leaves a lot to be desired. Work has been done on porting
